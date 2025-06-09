@@ -1,52 +1,71 @@
-from parser import *
-import random
-import string
+import threading
+from time import sleep
+from stream import *
 
-a = Num(random.randint(-100,100))
-b = Num(random.randint(-100,100))
-c = Num(random.randint(-100,100))
-d = Num(random.randint(-100,100))
-
-if Plus(a,b).calc() != a.calc()+b.calc():
-    print("problem with Plus (-10)")
-
-if Minus(a,b).calc() != a.calc()-b.calc():
-    print("problem with Minus (-10)")
-
-if Mul(a,b).calc() != a.calc()*b.calc():
-    print("problem with Mul (-10)")
-
-x = Div(a,b).calc()
-if x > a.calc()/b.calc()+0.01 or x < a.calc()/b.calc()-0.01:
-    print("problem with Div (-10)")
-
-if Plus(a,Mul(b,Minus(c,d))).calc() != a.calc()+b.calc()*(c.calc()-d.calc()) :
-    print("problem with expression (-10)")
+sm = 0
 
 
-def strf(x) -> string:
-    s=str(x)
-    if s.startswith('-'):
-        s="("+s+")"
-    return s
-
-sa = strf(a.calc())
-sb = strf(b.calc())
-sc = strf(c.calc())
-sd = strf(d.calc())
-
-s = sa+'+'+sb+'*('+sc+'-'+sd+')'
-if parser(s) != eval(s) :
-    print("problem with parser (-10)")
+def f(x):
+    global sm
+    sm += x
 
 
-s = sa+'*'+sa+'+'+sb+'*('+sc+'-'+sd+'+'+sb+')'
-if parser(s) != eval(s) :
-    print("problem with parser (-20)")
+def test1():
+    global sm
+    c = threading.active_count()
+    s = Stream()
+    if threading.active_count() != c + 1:
+        print('you did not open a thread for a stream (-10)')
 
-s = sa+'*('+sa+'+'+sb+'*('+sc+'-'+sd+'+'+sb+'))'
-if parser(s) != eval(s) :
-    print("problem with parser (-20)")
+    sm = 0
 
+    s.forEach(f)
+
+    for i in range(100):
+        s.add(i)
+
+    sleep(1)
+    if sm != 4950:
+        print('your forEach method did not work (-10)')
+
+    s.stop()
+
+    sleep(0.5)
+
+    if threading.active_count() != c:
+        print('you did not close all threads (-10)')
+
+
+def test2():
+    global sm
+    c = threading.active_count()
+    s = Stream()
+
+    sm = 0
+
+    s.apply(lambda x: x % 2 == 0).apply(lambda x: x * 10).forEach(f)
+
+    if threading.active_count() != c + 3:
+        print('you did not open the right ammount of threads (-20)')
+
+    for i in range(100):
+        s.add(i)
+
+    sleep(1)
+
+    if sm != 24500:
+        print('your precessing did not work (-25)')
+
+    s.stop()
+
+    sleep(0.5)
+
+    if threading.active_count() != c:
+        print('you did not close all threads (-25)')
+
+
+# main
+test1()
+test2()
 
 print("done")
