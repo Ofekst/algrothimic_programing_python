@@ -1,71 +1,55 @@
-import threading
-from time import sleep
-from stream import *
-
-sm = 0
-
-
-def f(x):
-    global sm
-    sm += x
+import datetime
+import random
+import sys
+from dnc import *
 
 
-def test1():
-    global sm
-    c = threading.active_count()
-    s = Stream()
-    if threading.active_count() != c + 1:
-        print('you did not open a thread for a stream (-10)')
+def minRange(arr,left,right):
+    mn=arr[left]
+    for i in range(left+1,right+1):
+        if mn>arr[i]:
+            mn=arr[i]
+    return mn
 
-    sm = 0
-
-    s.forEach(f)
-
-    for i in range(100):
-        s.add(i)
-
-    sleep(1)
-    if sm != 4950:
-        print('your forEach method did not work (-10)')
-
-    s.stop()
-
-    sleep(0.5)
-
-    if threading.active_count() != c:
-        print('you did not close all threads (-10)')
+def naiveMaxHistArea(hist):
+    maxArea=0
+    for i in range(len(hist)):
+        for j in range(i,len(hist)):
+            area = minRange(hist,i,j) * (j+1-i)
+            if maxArea<area:
+                maxArea = area
+    return maxArea
 
 
-def test2():
-    global sm
-    c = threading.active_count()
-    s = Stream()
-
-    sm = 0
-
-    s.apply(lambda x: x % 2 == 0).apply(lambda x: x * 10).forEach(f)
-
-    if threading.active_count() != c + 3:
-        print('you did not open the right ammount of threads (-20)')
-
-    for i in range(100):
-        s.add(i)
-
-    sleep(1)
-
-    if sm != 24500:
-        print('your precessing did not work (-25)')
-
-    s.stop()
-
-    sleep(0.5)
-
-    if threading.active_count() != c:
-        print('you did not close all threads (-25)')
+def run(arr:list,f):
+    t0 =  datetime.datetime.now()
+    result = f(arr)
+    t1 =  datetime.datetime.now()
+    delta = t1-t0
+    return result , delta.microseconds
 
 
-# main
-test1()
-test2()
+mx = dnc(lambda x:x, lambda x,y : max(x,y))
+mn = dnc(lambda x:x, lambda x,y : min(x,y))
+
+arr = [random.randint(-10, 10) for i in range(1024)]
+if mx(arr) != max(arr):
+    print("you got a wrong result for max (-25)")
+if mn(arr) != min(arr):
+    print("you got a wrong result for min (-25)")
+
+
+arr = [random.randint(20, 100) for i in range(512)]
+nr,nt = run(arr, naiveMaxHistArea)
+mr,mt = run(arr, maxAreaHist)
+
+
+if mr!=nr:
+    print("you didn't get the correct result (-25)")
+if nt /100 < mt:
+    print("you didn't implement an efficient algo (-25)")
+
 
 print("done")
+
+
