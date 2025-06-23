@@ -1,7 +1,7 @@
 import math
 
 
-def calculate_euclidean_distance(p1, p2) -> float:
+def calculate_euclidean_distance(p1, p2):
     """
     Calculates the Euclidean distance between two points in 2D space.
 
@@ -11,7 +11,7 @@ def calculate_euclidean_distance(p1, p2) -> float:
     """
     return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 
-def find_closest_point(current_point, points:list, visited:set[int]):
+def find_closest_point(current_point, points, visited):
     """
     Finds the closest unvisited point in the list of points.
     :param current_point: The point from which distances are calculated
